@@ -30,3 +30,13 @@ def reconsturct_binary(x):
         sum = sum + x[i]*2**(-(i+1))
 
     return sum
+
+def highest_nonzero_index(arr):
+    """
+    0이 아닌 원소 중 가장 높은 인덱스를 반환.
+    없으면 -1 반환.
+    """
+    for i in range(len(arr) - 1, -1, -1):  # 배열을 역순으로 탐색
+        if arr[i] != 0:
+            return i
+    return -1  # 0이 아닌 원소가 없는 경우

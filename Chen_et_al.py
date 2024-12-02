@@ -1,8 +1,7 @@
 import numpy as np
 import functions as f
 
-def Chen(K, sigma_dl, sigma_n, P, b, tau_min, tau_max, q):
-    L = 2
+def Chen(K, L, sigma_dl, sigma_n, P, b, tau_min, tau_max, q):
     Nt = L
     Nr = L
 
@@ -47,12 +46,12 @@ def Chen(K, sigma_dl, sigma_n, P, b, tau_min, tau_max, q):
     A = np.eye(L) / np.sqrt(eta)
 
     B_k = np.zeros((K, Nt, L), dtype=complex)
-    print("q=",q)
+
     for k in range(K):
         H_k_squared = H_k[k] @ np.transpose(H_k[k]).conj()
         B_k[k] = np.sqrt(eta) * np.transpose(H_k[k]).conj() @ np.linalg.inv(H_k_squared) @ w_k
         Pk =  np.linalg.norm(B_k[k]@s_k[k])
-        print(Pk)
+
 
 
     # Calcuating sum of symbols

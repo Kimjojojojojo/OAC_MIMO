@@ -1,13 +1,19 @@
 import numpy as np
 import functions as f
 
-x = 0.05
-b = 5
-min_val = 0.01
-max_val = 0.1
-
-O, Q = f.quantize_scalar(x, b, min_val, max_val)
-concat = np.concatenate((O, Q), axis=0)
-print(O)
+Nt = 4
+eta_min = [0.1]
+eta_max = [1]
+M = 10 # feedback round
+K = 3
+Q = np.linspace(eta_min[0], eta_max[0], Nt)
+m_k = np.zeros(K)
+eta_k = 0.5
 print(Q)
-print(concat)
+for k in range(K):
+    m_k[k] = np.argmin(np.abs(eta_k - Q))
+print(m_k)
+
+print(eta_k-Q)
+
+print(np.argmin(Q))
