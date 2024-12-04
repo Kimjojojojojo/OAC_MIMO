@@ -6,9 +6,9 @@ import functions as f
 ###### Variables #####
 
 
-def Zhu(K, L,sigma_dl, sigma_n, P_0):
-    Nt = L
-    Nr = L
+def Zhu(K, at, L, sigma_dl, sigma_n, P_0):
+    Nt = 1
+    Nr = at
 
     H_k = (np.random.normal(0, 1, (K, Nr, Nt)) + 1j * np.random.normal(0, 1, (K, Nr, Nt))) / np.sqrt(2)
 
@@ -17,13 +17,13 @@ def Zhu(K, L,sigma_dl, sigma_n, P_0):
 
     # eigenvlue & vector extraction
     for k in range(K):
-        eigenvalues, eigenvectors = np.linalg.eig(H_k[k]@np.transpose(H_k[k]).conj())
+        eigenvectors, eigenvalues, _ = np.linalg.svd(H_k[k])
         idx = np.argsort(eigenvalues)[::-1]  # 내림차순 정렬 (내림차순이 필요 없으면 [::1])
         sorted_eigenvalues = np.real(eigenvalues[idx])
         sorted_eigenvectors = eigenvectors[:, idx]
 
         U_k[k] = sorted_eigenvectors
-        lambda_min_k[k] = sorted_eigenvalues[-1]
+        lambda_min_k[k] = sorted_eigenvalues[-1]**2
 
     G = np.zeros((Nr, Nr), dtype=complex)
     for k in range(K):
@@ -49,17 +49,18 @@ def Zhu(K, L,sigma_dl, sigma_n, P_0):
     eta_star_hat = 1
     for m in range(M):
         # 1)
-        Delta = (eta_max - eta_min)/Nt
+        Delta = (eta_max - eta_min)/L
         # 2)
-        Q = np.linspace(eta_min, eta_max, Nt)
+        Q = np.linspace(eta_min, eta_max, L)
         # 3)
-        e_k = np.zeros(K)
-        print(eta_min, eta_max, eta_star_hat, eta_star)
-        print("##############################")
+        e_k = np.zeros((K, L))
+
+
         for k in range(K):
             m_k = np.argmin(np.abs(eta_k[k] - Q))
-            e_k[m_k] = 1
-        l_max = f.highest_nonzero_index(e_k)
+            e_k[k][m_k] = 1
+        e_sum = np.sum(e_k,0)
+        l_max = f.highest_nonzero_index(e_sum)
 
         # 4)
         eta_star_hat = eta_k[l_max]
@@ -69,12 +70,15 @@ def Zhu(K, L,sigma_dl, sigma_n, P_0):
     eta_star_hat = eta_star_hat
     #print(eta_star, (eta_star-eta_star_hat)/eta_star * 100)
     ##########################
-    A_star = np.sqrt(eta_star)*F_star
+    A_star = np.sqrt(eta_star_hat)*F_star
 
     B_k_star = np.zeros((K, Nt, L), dtype=complex)
     for k in range(K):
         tmp = np.transpose(A_star).conj()@H_k[k]
-        B_k_star[k] = np.transpose(tmp).conj() @ np.linalg.inv(tmp@np.transpose(tmp).conj())
+        if Nt == 1:
+            B_k_star[k] = np.transpose(tmp).conj() / (np.linalg.norm(tmp))
+        else:
+            B_k_star[k] = np.transpose(tmp).conj() @ np.linalg.inv(tmp@np.transpose(tmp).conj())
 
     s_k = (np.random.normal(0, sigma_dl, (K, L, 1)) + 1j * np.random.normal(0, sigma_dl, (K, L, 1))) / np.sqrt(2)
     n = (np.random.normal(0, sigma_n, (Nr, 1)) + 1j * np.random.normal(0, sigma_n, (Nr, 1))) / np.sqrt(2)
@@ -90,4 +94,8 @@ def Zhu(K, L,sigma_dl, sigma_n, P_0):
 
     e_norm = np.linalg.norm(e)
 
-    return e_norm
+    if eta_star_hat >= 1:
+        print('###########')
+        print(eta_star_hat)
+        print('###########')
+    return abs(eta_star - eta_star_hat)
